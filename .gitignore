@@ -1,0 +1,8 @@
+*
+!.gitignore
+!index.html
+!photos/
+!photos/**
+*.png
+*.webp
+Carla_SAMARTANO_800x800.jpg

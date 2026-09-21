@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Votre rendez-vous est confirmé — Victime Conseil</title>
+<meta name="description" content="Un avocat expert va vous appeler. Avant cet appel, découvrez votre feuille de route, étape par étape. Deux minutes de lecture.">
+
+<!-- ============================================================
+     POLICES — Google Fonts uniquement
+     ============================================================ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   DESIGN SYSTEM
+   ============================================================ */
+:root {
+  --fond:            #FBFAF8;
+  --texte:           #1C1C1A;
+  --texte-secondaire:#5A5A54;
+  --accent:          #2E5C6E;
+  --accent-clair:    #8FB3BF;
+  --accent-teinte:   #EEF3F4;
+  --fond-encart:     #F2EFE9;
+  --fond-alerte:     #FAF3E8;
+  --bord-alerte:     #E4CFA6;
+  --bordure:         #E3DFD7;
+
+  --serif: "Fraunces", Georgia, serif;
+  --sans:  "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --radius: 16px;
+
+  /* Colonne du tracé (pilotée aussi en JS) */
+  --trace-largeur: 240px;
+}
+@media (max-width: 639px) {
+  :root { --trace-largeur: 72px; }
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: var(--serif);
+  font-weight: 500;
+  margin: 0 0 18px;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+p { margin: 0 0 16px; max-width: 34rem; }
+p:last-child { margin-bottom: 0; }
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--texte-secondaire);
+  margin-bottom: 14px;
+}
+.label svg { color: var(--accent-clair); }
+
+.kicker {
+  display: block;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 16px;
+  color: var(--accent-clair);
+  margin-bottom: 8px;
+}
+
+/* ============================================================
+   MODE LECTURE (sans JS) : tous les écrans sont empilés et
+   lisibles — le contenu ne dépend jamais du JS pour s'afficher.
+   ============================================================ */
+.ecran {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 72px 24px;
+}
+#trace, .navigation, .entete, .progression { display: none; }
+
+/* ============================================================
+   MODE PARCOURS (JS actif) : écran par écran, sans scroll
+   ============================================================ */
+html.js body { overflow: hidden; }
+
+html.js .ecran {
+  position: fixed;
+  inset: 0;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  overflow-y: auto;           /* filet de sécurité si petit écran */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 300ms ease-out, visibility 0s linear 300ms;
+}
+html.js .ecran.actif {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 300ms ease-out, visibility 0s linear 0s;
+}
+
+/* Zone de contenu : à droite de la colonne du tracé.
+   margin:auto centre verticalement quand l'espace le permet,
+   et s'aligne en haut (sans rogner) quand le contenu déborde. */
+html.js .ecran-inner {
+  width: 100%;
+  max-width: 760px;
+  margin: auto;
+  padding: 96px 48px 140px calc(var(--trace-largeur) + 8vw);
+}
+/* Écrans larges (citations en 2 cartes, équipe) */
+html.js .ecran-inner.large { max-width: 960px; }
+/* Écrans centrés (intro, final) */
+html.js .ecran-inner.centre { text-align: center; }
+html.js .ecran-inner.centre p { margin-left: auto; margin-right: auto; }
+
+/* Entrée / sortie du contenu */
+html.js .anim {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 500ms ease-out, transform 500ms ease-out;
+}
+html.js .anim:nth-child(2) { transition-delay: 70ms; }
+html.js .anim:nth-child(3) { transition-delay: 140ms; }
+html.js .anim:nth-child(4) { transition-delay: 210ms; }
+html.js .anim:nth-child(5) { transition-delay: 280ms; }
+html.js .ecran.actif.entre .anim { opacity: 1; transform: none; }
+html.js .ecran.sort .anim {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition-duration: 220ms;
+  transition-delay: 0ms;
+}
+
+/* Reduced motion : tout est immédiat */
+@media (prefers-reduced-motion: reduce) {
+  html.js .anim, html.js .ecran { transition: none !important; }
+}
+
+/* ============================================================
+   EN-TÊTE, PROGRESSION, NAVIGATION (mode parcours)
+   ============================================================ */
+html.js .entete {
+  display: flex;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 20;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 28px;
+  pointer-events: none;
+}
+@media (max-width: 639px) {
+  /* Décale la marque hors de la colonne du tracé */
+  html.js .entete { padding-left: calc(var(--trace-largeur) + 16px); }
+}
+.marque {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.marque .point-marque {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.compteur-ecrans {
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  color: var(--texte-secondaire);
+  font-variant-numeric: tabular-nums;
+}
+
+html.js .progression {
+  display: block;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--bordure);
+  z-index: 30;
+}
+.progression i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  transition: width 600ms ease-out;
+}
+
+html.js .navigation {
+  display: flex;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 20;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  row-gap: 10px;
+  column-gap: 16px;
+  padding: 40px 24px calc(24px + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, var(--fond) 55%, rgba(251,250,248,0));
+}
+.bouton {
+  appearance: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  min-height: 52px;
+  padding: 14px 32px;
+  border-radius: 999px;
+  transition: transform 180ms ease-out, box-shadow 180ms ease-out,
+              background-color 180ms ease-out, border-color 300ms ease-out, color 300ms ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+.bouton:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* CTA principal — P3 : teal vif #1B7A8C (contraste blanc 4,99:1, AA) */
+.bouton-principal {
+  position: relative;
+  background: #1B7A8C;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(27,122,140,0.20), 0 1px 3px rgba(28,28,26,0.08);
+  /* P2 : halo respirant, faible amplitude */
+  animation: cta-halo 3.5s ease-in-out infinite;
+  padding-right: 52px;
+  padding-left: 34px;
+}
+/* P1 : le reflet glisse rarement sur le bouton (1,26 s toutes les 7 s) */
+.bouton-principal::before {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0; left: 0;
+  width: 34%;
+  border-radius: inherit;
+  background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.30) 50%, transparent 100%);
+  transform: translateX(-175%) skewX(-18deg);
+  pointer-events: none;
+  animation: cta-reflet 7s cubic-bezier(0.4,0,0.2,1) infinite;
+}
+/* Micro-flèche qui pulse */
+.bouton-principal::after {
+  content: "→";
+  position: absolute;
+  right: 22px; top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255,255,255,0.92);
+  font-size: 20px;
+  pointer-events: none;
+  animation: cta-fleche 1.8s ease-in-out infinite;
+}
+.bouton-principal:hover::before,
+.bouton-principal:focus-visible::before,
+.bouton-principal:active::before { animation-play-state: paused; }
+
+@keyframes cta-halo {
+  0%, 100% { box-shadow: 0 4px 12px rgba(27,122,140,0.14), 0 1px 3px rgba(28,28,26,0.08); }
+  50%      { box-shadow: 0 7px 22px rgba(27,122,140,0.26), 0 1px 3px rgba(28,28,26,0.08); }
+}
+@keyframes cta-reflet {
+  0%, 80% { transform: translateX(-175%) skewX(-18deg); }
+  90%     { transform: translateX(230%)  skewX(-18deg); }
+  100%    { transform: translateX(230%)  skewX(-18deg); }
+}
+@keyframes cta-fleche {
+  0%, 100% { transform: translateY(-50%) translateX(0);   opacity: 0.55; }
+  50%      { transform: translateY(-50%) translateX(3px); opacity: 1; }
+}
+
+/* Lift + dégradé — seulement si la souris est réelle (évite le sticky hover mobile) */
+@media (hover: hover) and (pointer: fine) {
+  .bouton-principal:hover {
+    background: #145D6B;
+    transform: translateY(-2px);
+  }
+}
+.bouton-principal:active { transform: translateY(1px) scale(0.985); background: #145D6B; }
+
+.bouton-fantome {
+  background: transparent;
+  color: var(--texte-secondaire);
+  border: 1px solid var(--bordure);
+}
+.bouton-fantome:hover { border-color: var(--accent-clair); color: var(--texte); }
+.bouton[hidden] { display: none; }
+.indice-clavier {
+  position: fixed;
+  bottom: 40px;
+  right: 28px;
+  font-size: 13px;
+  color: var(--texte-secondaire);
+  z-index: 20;
+}
+@media (max-width: 900px) { .indice-clavier { display: none; } }
+
+/* Navigation mobile : primaire large mais pas full-bleed (zone de pouce, ≥ 56 px) */
+@media (max-width: 639px) {
+  html.js .navigation {
+    column-gap: 10px;
+    padding: 22px 16px calc(16px + env(safe-area-inset-bottom));
+  }
+  html.js .navigation .bouton-principal {
+    flex: 1 1 170px;
+    max-width: 420px;
+    min-height: 56px;
+    font-size: 16px;
+    padding-left: 28px;
+  }
+  html.js .navigation .bouton-fantome {
+    flex: 0 0 auto;
+    min-height: 48px;
+    padding: 0 14px;
+    font-size: 15px;
+  }
+}
+/* Tout petit écran (< 320 px) : on empile au lieu de faire déborder */
+@media (max-width: 319px) {
+  html.js .navigation { flex-direction: column; }
+  html.js .navigation .bouton-principal { width: 100%; flex: none; }
+}
+
+/* Reduced motion : CTA figé, flèche + reflet + halo coupés */
+@media (prefers-reduced-motion: reduce) {
+  .bouton-principal, .bouton-principal::before, .bouton-principal::after { animation: none !important; }
+  .bouton-principal::after { display: none; }
+  .bouton-principal {
+    box-shadow: 0 4px 14px rgba(27,122,140,0.20), 0 1px 3px rgba(28,28,26,0.08);
+    transition: none;
+  }
+  .bouton-principal:hover { transform: none; }
+}
+
+/* ============================================================
+   LE TRACÉ (mode parcours)
+   ============================================================ */
+html.js #trace {
+  display: block;
+  position: fixed;
+  top: 0;
+  left: max(3vw, 16px);
+  height: 100vh;
+  z-index: 1;
+  pointer-events: none;
+}
+#trace .trace-base     { stroke: var(--accent-clair); stroke-width: 2.5; fill: none; stroke-linecap: round; opacity: .55; }
+#trace .trace-progres  { stroke: var(--accent);       stroke-width: 2.5; fill: none; stroke-linecap: round; }
+#trace .dot-halo { fill: var(--accent-clair); opacity: 0; transition: opacity 500ms ease-out; }
+#trace .dot.lit .dot-halo { opacity: 0.3; }
+#trace .dot-core {
+  fill: var(--fond);
+  stroke: var(--accent-clair);
+  stroke-width: 2;
+  transition: fill 500ms ease-out, stroke 500ms ease-out;
+}
+#trace .dot.lit .dot-core { fill: var(--accent); stroke: var(--accent); }
+#trace .dot { cursor: pointer; pointer-events: auto; }
+
+/* ============================================================
+   COMPOSANTS D'ÉCRAN
+   ============================================================ */
+.titre-ecran { font-size: 30px; line-height: 1.2; }
+@media (min-width: 640px) { .titre-ecran { font-size: 38px; } }
+
+.intro-titre { font-size: 36px; line-height: 1.12; }
+@media (min-width: 640px) { .intro-titre { font-size: 52px; } }
+.intro-titre em, .final-titre em { font-style: italic; color: var(--accent); }
+
+.sous-titre {
+  font-size: 18px;
+  line-height: 1.55;
+  color: var(--texte-secondaire);
+}
+
+.texte-secondaire { color: var(--texte-secondaire); }
+.filet-haut { border-top: 1px solid var(--bordure); padding-top: 18px; margin-top: 24px; font-size: 15px; }
+
+.badge-attention {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: rgba(214, 122, 42, 0.09);
+  border: 1px solid rgba(214, 122, 42, 0.28);
+  color: #9A5B1C;
+  font-size: 14.5px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 999px;
+  margin-top: 18px;
+  max-width: 34rem;
+}
+.badge-attention svg { flex-shrink: 0; }
+
+.badge-doux {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--accent-teinte);
+  color: var(--accent);
+  font-size: 14.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  padding: 12px 22px 12px 18px;
+  border: 1px solid var(--accent-clair);
+  border-radius: 999px;
+  margin-top: 28px;
+  box-shadow: 0 1px 3px rgba(46, 92, 110, 0.08);
+}
+
+.encart {
+  background: var(--fond-encart);
+  border-left: 3px solid var(--accent-clair);
+  border-radius: var(--radius);
+  padding: 26px 28px;
+  margin-top: 24px;
+}
+.encart.alerte { background: var(--fond-alerte); border-left-color: var(--bord-alerte); }
+.encart h3 { font-size: 22px; margin-bottom: 8px; }
+
+/* Phrase clé de fin d'étape : citation style Notion — barre épaisse + surlignage bleu */
+.phrase-cles {
+  margin-top: 28px;
+  max-width: 34rem;
+  padding: 14px 20px;
+  background: rgba(46, 92, 110, 0.08);
+  border-left: 4px solid var(--accent);
+  border-radius: 0 12px 12px 0;
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--texte);
+}
+@media (max-width: 639px) { .phrase-cles { font-size: 16.5px; padding: 12px 16px; } }
+
+/* Surlignage stabilo naturel : bords irréguliers, léger angle */
+.stab {
+  background-image: linear-gradient(100deg, rgba(247, 224, 138, 0) 0.5%, rgba(247, 224, 138, 0.55) 4%, rgba(247, 224, 138, 0.48) 96%, rgba(247, 224, 138, 0) 99.5%);
+  padding: 0.05em 0.22em;
+  margin: 0 -0.12em;
+  border-radius: 7px 2px 9px 3px;
+  font-weight: 500;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* Citation en 2 cartes (photo + texte), comme la maquette */
+.citation-duo {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 24px;
+  align-items: stretch;
+}
+.citation-duo .photo-carte {
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--fond-encart);
+  min-height: 280px;
+}
+.citation-duo .photo-carte img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: 50% 25%;
+  display: block;
+}
+.citation-duo .texte-carte {
+  background: #fff;
+  border: 1px solid var(--bordure);
+  border-radius: var(--radius);
+  padding: 40px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.citation-duo blockquote {
+  margin: 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 21px;
+  line-height: 1.5;
+}
+.citation-duo .source {
+  margin-top: 20px;
+  font-size: 15px;
+  font-style: italic;
+  color: var(--texte-secondaire);
+  line-height: 1.5;
+}
+.citation-duo .source strong { display: block; color: var(--texte); font-style: normal; font-weight: 700; font-size: 17.5px; letter-spacing: 0.01em; }
+@media (max-width: 720px) {
+  .citation-duo { grid-template-columns: 1fr; }
+  .citation-duo .photo-carte { min-height: 0; height: 200px; }
+  .citation-duo .texte-carte { padding: 24px; }
+  .citation-duo blockquote { font-size: 19px; }
+}
+
+/* Écran équipe */
+.equipe-photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 28px;
+  justify-content: center;
+}
+.equipe-photos figure { margin: 0; width: 104px; text-align: center; }
+.equipe-photos img {
+  width: 104px; height: 104px;
+  object-fit: cover;
+  border-radius: var(--radius);
+  display: block;
+  margin-bottom: 8px;
+}
+.equipe-photos figcaption { font-size: 12px; line-height: 1.4; color: var(--texte-secondaire); }
+.equipe-photos figcaption strong { display: block; font-size: 13px; color: var(--texte); font-weight: 500; }
+@media (min-width: 900px) {
+  .equipe-photos { gap: 20px; margin-top: 32px; }
+  .equipe-photos figure { width: 150px; }
+  .equipe-photos img { width: 150px; height: 150px; margin-bottom: 10px; }
+  .equipe-photos figcaption { font-size: 13px; }
+  .equipe-photos figcaption strong { font-size: 14px; }
+}
+
+/* Motif des points : « … » vertical qui s'anime sous la grille */
+.points-verticaux {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  margin: 36px auto 20px;
+}
+.points-verticaux i {
+  display: block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent-clair);
+}
+html.js .points-verticaux i { opacity: 0; }
+html.js .ecran.actif.entre .points-verticaux i { animation: point-suspens 1.2s ease-out both; }
+html.js .ecran.actif.entre .points-verticaux i:nth-child(2) { animation-delay: 0.18s; }
+html.js .ecran.actif.entre .points-verticaux i:nth-child(3) { animation-delay: 0.36s; }
+@keyframes point-suspens {
+  from { opacity: 0; transform: translateY(4px) scale(0.5); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html.js .points-verticaux i { opacity: 1; animation: none !important; }
+}
+
+/* Gestes irréversibles */
+.geste {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  background: var(--fond-alerte);
+  border: 1px solid rgba(228, 207, 166, 0.6);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin-bottom: 12px;
+}
+.geste .geste-icone {
+  flex-shrink: 0;
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid var(--bord-alerte);
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+  margin-top: 2px;
+}
+.geste strong { display: block; font-weight: 500; margin-bottom: 2px; font-size: 16px; }
+.geste p { color: var(--texte-secondaire); font-size: 15px; }
+
+/* Checklist */
+.checklist { list-style: none; margin: 24px 0 0; padding: 0; }
+.checklist li { margin-bottom: 8px; }
+.checklist label {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 48px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid var(--bordure);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 300ms ease-out, border-color 300ms ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+.checklist label:hover { border-color: var(--accent-clair); }
+.checklist input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.checklist .case {
+  flex-shrink: 0;
+  width: 24px; height: 24px;
+  border: 1.5px solid var(--accent-clair);
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  transition: background 300ms ease-out, border-color 300ms ease-out;
+}
+.checklist .case svg { opacity: 0; transform: scale(0.6); transition: opacity 250ms ease-out, transform 250ms ease-out; color: #fff; }
+.checklist input:checked ~ .case { background: var(--accent); border-color: var(--accent); }
+.checklist input:checked ~ .case svg { opacity: 1; transform: scale(1); }
+.checklist label:has(input:checked) { background: var(--accent-teinte); border-color: var(--accent-clair); }
+.checklist input:checked ~ .item-texte { color: var(--texte-secondaire); opacity: 0.65; }
+.checklist .item-texte { transition: opacity 300ms ease-out; }
+.checklist input:focus-visible ~ .case { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.compteur-check {
+  margin-top: 16px;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--texte-secondaire);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.compteur-check .jauge {
+  flex: 1;
+  max-width: 140px;
+  height: 3px;
+  background: var(--bordure);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.compteur-check .jauge i { display: block; height: 100%; width: 0; background: var(--accent); transition: width 400ms ease-out; }
+
+/* Mention finale */
+.mention {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--bordure);
+  font-size: 14px;
+  color: var(--texte-secondaire);
+  line-height: 1.6;
+}
+</style>
+</head>
+
+<body>
+
+<!-- ==========================================================
+     EN-TÊTE + PROGRESSION (visibles en mode parcours)
+     ========================================================== -->
+<div class="progression" aria-hidden="true"><i id="progression-remplissage"></i></div>
+<header class="entete">
+  <span class="marque"><span class="point-marque" aria-hidden="true"></span>Victime Conseil</span>
+  <span class="compteur-ecrans" id="compteur-ecrans">1 / 14</span>
+</header>
+
+<!-- ==========================================================
+     LE TRACÉ — SVG généré et piloté par le JS
+     ========================================================== -->
+<svg id="trace" aria-hidden="true">
+  <path class="trace-base" d=""/>
+  <path class="trace-progres" d=""/>
+  <g id="trace-points"></g>
+</svg>
+
+<!-- ==========================================================
+     ÉCRAN 0 — INTRO (générique : ni nom, ni date, ni numéro)
+     ========================================================== -->
+<section class="ecran" data-id="intro">
+  <div class="ecran-inner centre">
+    <span class="label anim">Votre rendez-vous est confirmé</span>
+    <h1 class="intro-titre anim">Un avocat expert<br>va <em>vous appeler</em>.</h1>
+    <p class="sous-titre anim">Avant cet appel, voici ce qui vous attend — étape par étape.<br>
+    Pas de jargon. Deux minutes de lecture.</p>
+  </div>
+</section>
+
+<!-- ==========================================================
+     ÉCRAN 1 — ÉTAPE 1 : ON VOUS ÉCOUTE
+     ========================================================== -->
+<section class="ecran" data-id="etape-1">
+  <div class="ecran-inner">
+    <span class="kicker anim">Étape 1 — Le premier contact</span>
+    <h2 class="titre-ecran anim">On vous écoute.</h2>
+    <p class="anim">Votre premier échange sert à comprendre ce que vous avez vécu, et ce que vous vivez depuis.</p>
+    <p class="anim">On fait le point sur vos documents, sur qui doit vous indemniser, et sur <span class="stab">les délais qui courent déjà</span> sans que vous le sachiez.</p>
+    <p class="phrase-cles anim">À la fin de cet échange, vous saurez exactement où vous en êtes — et ce que vous pouvez faire, ou ne pas faire, en attendant.</p>
+    <span class="badge-doux anim"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Ce premier échange est offert.</span>
+  </div>
+</section>
+
+<!-- ==========================================================
+     ÉCRAN 2 — ÉTAPE 2 : ON MONTE VOTRE DOSSIER
+     ========================================================== -->
+<section class="ecran" data-id="etape-2">
+  <div class="ecran-inner">
+    <span class="kicker anim">Étape 2 — Le dossier</span>
+    <h2 class="titre-ecran anim">On monte votre dossier.</h2>
+    <p class="anim">Constat, procès-verbal, certificats médicaux, arrêts de travail, justificatifs : chaque pièce compte.</p>
+    <p class="anim">Un procès-verbal incomplet ou un certificat mal rédigé <span class="stab">peut coûter des mois de procédure</span>. Votre avocat relit tout — et conteste si nécessaire.</p>
+    <p class="phrase-cles anim">À partir de là, c'est lui qui parle à l'assureur à votre place. Vous ne gérez plus ni courrier, ni relances : cette charge-là ne vous appartient plus.</p>
+  </div>
+</section>
+
+<!-- ==========================================================
+     ÉCRAN 4 — CITATION AVOCAT 1 (question, photo)
+     ========================================================== -->
+<section class="ecran" data-id="citation-1">
+  <div class="ecran-inner large">
+    <div class="citation-duo">
+      <div class="photo-carte anim">
+        <img src="photos/xavier-denis.jpg" alt="Maître Xavier Denis" loading="lazy">
+      </div>
+      <div class="texte-carte anim">
+        <blockquote>«&nbsp;Quand un dossier est mal préparé, qui en profite ? Pas la victime, en tout cas.&nbsp;»</blockquote>
+        <p class="source"><strong>Maître Xavier Denis</strong>Avocat en réparation du dommage corporel</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
+     ÉCRAN 5 — ÉTAPE 3 : L'EXPERTISE MÉDICALE
+     ========================================================== -->
+<section class="ecran" data-id="etape-3">
+  <div class="ecran-inner">
+    <span class="label anim">Le moment décisif</span>
+    <h2 class="titre-ecran anim">L'expertise médicale.</h2>
+    <p class="anim">C'est le rendez-vous qui décide de presque toute votre indemnisation : une gêne absente du rapport de l'expert n'est presque jamais réparée.</p>
+    <p class="anim">Or, le médecin qui vous examine est <span class="stab">missionné et payé par l'assurance</span>. Beaucoup de victimes s'y rendent seules, persuadées qu'il est neutre.</p>
+    <p class="phrase-cles anim">Votre avocat, lui, ne laisse rien au hasard : c'est lui qui choisit le médecin-conseil qui vous accompagnera — et qui provoque une contre-expertise si le rapport oublie des préjudices.</p>
+  </div>
+</section>
+
+<!-- ==========================================================
+     ÉCRAN 6 — CITATION AVOCAT 2 (question, photo)
+     ========================================================== -->
+<section class="ecran" data-id="citation-2">
+  <div class="ecran-inner large">
+    <div class="citation-duo">
+      <div class="photo-carte anim">
+        <img src="photos/juliette-cochet-barbuat.jpg" alt="Maître Juliette Cochet-Barbuat" loading="lazy">
+      </div>
+      <div class="texte-carte anim">
+        <blockquote>«&nbsp;Ce rendez-vous ressemble à une consultation. C'est en réalité le moment où se joue votre indemnisation. L'avocat et le médecin-conseil se mobilisent pour une expertise médicale juste.&nbsp;»</blockquote>
+        <p class="source"><strong>Maître Juliette Cochet-Barbuat</strong>Avocat en réparation du dommage corporel</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
+     ÉCRAN 7 — ÉTAPE 4 : ON CHIFFRE, ON NÉGOCIE, ON CONCLUT
+     ========================================================== -->
+<section class="ecran" data-id="etape-4">
+  <div class="ecran-inner">
+    <span class="kicker anim">Étape 4 — L'indemnisation</span>
+    <h2 class="titre-ecran anim">On chiffre, on négocie,<br>on conclut.</h2>
+    <p class="anim">Soins, perte de revenus, aide apportée par vos proches, ce que vous ne pouvez plus faire : <span class="stab">chaque préjudice est évalué</span>.</p>
+    <p class="anim">Votre avocat négocie. Si l'assureur conteste, il se battra pour votre réparation.</p>
+    <p class="phrase-cles anim">Et il vérifie l'offre finale, ligne par ligne, avant que vous ne signiez quoi que ce soit.</p>
+  </div>
+</section>
+
+<!-- ==========================================================
+     ÉCRAN 8 — CITATION AVOCAT 3 (question, photo)
+     ========================================================== -->
+<section class="ecran" data-id="citation-3">
+  <div class="ecran-inner large">
+    <div class="citation-duo">
+      <div class="photo-carte anim">
+        <img src="photos/olivier-descamps.jpg" alt="Maître Olivier Descamps" loading="lazy">
+      </div>
+      <div class="texte-carte anim">
+        <blockquote>«&nbsp;Mon travail commence là où l'assurance espère que vous vous arrêterez.&nbsp;»</blockquote>
+        <p class="source"><strong>Maître Olivier Descamps</strong>Avocat en réparation du dommage corporel</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
+     ÉCRAN 9 — ÉQUIPE (échantillon d'avocats)
+     ========================================================== -->
+<section class="ecran" data-id="equipe">
+  <div class="ecran-inner large centre">
+    <span class="label anim">Ils vous accompagnent</span>
+    <h2 class="titre-ecran anim">Des avocats experts qui sont là pour vous.</h2>
+    <div class="equipe-photos anim">
+      <figure>
+        <img src="photos/carla-samartano.jpg" alt="Maître Carla Samartano" loading="lazy">
+        <figcaption><strong>Carla Samartano</strong></figcaption>
+      </figure>
+      <figure>
+        <img src="photos/xavier-denis.jpg" alt="Maître Xavier Denis" loading="lazy">
+        <figcaption><strong>Xavier Denis</strong></figcaption>
+      </figure>
+      <figure>
+        <img src="photos/anthony-daversa.jpg" alt="Maître Anthony D'Aversa" loading="lazy">
+        <figcaption><strong>Anthony D'Aversa</strong></figcaption>
+      </figure>
+      <figure>
+        <img src="photos/juliette-cochet-barbuat.jpg" alt="Maître Juliette Cochet-Barbuat" loading="lazy">
+        <figcaption><strong>Juliette Cochet-Barbuat</strong></figcaption>
+      </figure>
+      <figure>
+        <img src="photos/Zinedine-Zidane.jpg" alt="Zinedine Zidane" loading="lazy">
+        <figcaption><strong>Zinedine Zidane</strong></figcaption>
+      </figure>
+    </div>
+    <div class="points-verticaux anim" aria-hidden="true"><i></i><i></i><i></i></div>
+    <p class="texte-secondaire anim">Et bien d'autres avocats experts en dommage corporel, dans toute la France.</p>
+  </div>
+</section>
+
+<!-- ==========================================================
+     ÉCRAN 10 — OBJECTION : LE COÛT
+     ========================================================== -->
+<section class="ecran" data-id="cout">
+  <div class="ecran-inner">
+    <span class="kicker anim">Ce que vous vous dites peut-être</span>
+    <h2 class="titre-ecran anim">«&nbsp;Un avocat, ça va me coûter cher.&nbsp;»</h2>
+    <p class="badge-attention anim"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span><strong>Attention</strong> — un avocat payé uniquement à la commission, c'est illégal.</span></p>
+    <p class="anim">Les honoraires reposent sur un forfait modeste pour l'ouverture du dossier, et un pourcentage calculé sur l'indemnité obtenue.</p>
+    <p class="anim">Et si l'étude de votre dossier montre qu'il ne peut pas négocier une meilleure indemnité, votre avocat <span class="stab">ne le prendra pas — et ne vous facturera rien</span>.</p>
+    <div class="encart anim">
+      <p>→ Vérifiez si vous avez une protection juridique dans vos contrats. Elle peut couvrir tout ou partie des frais. Beaucoup de gens en ont une sans le savoir.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
+     ÉCRAN 11 — OBJECTION : LE TEMPS
+     ========================================================== -->
+<section class="ecran" data-id="delai">
+  <div class="ecran-inner">
+    <span class="kicker anim">Ce que vous vous dites peut-être</span>
+    <h2 class="titre-ecran anim">«&nbsp;Ça va durer des années.&nbsp;»</h2>
+    <p class="anim">Non. La très grande majorité des dossiers se règle à l'amiable, sans jamais voir un tribunal — et pendant ce temps-là, vous vous concentrez sur votre santé.</p>
+    <p class="anim">La loi impose des délais à votre assureur : une première offre dans les 8 mois suivant l'accident, une offre définitive dans les 5 mois suivant votre consolidation. S'il tarde, il vous doit des intérêts.</p>
+    <p class="phrase-cles anim">Encore faut-il que quelqu'un les fasse respecter. C'est le rôle de votre avocat : faire avancer votre dossier, réclamer une avance bien avant le règlement final — et ne pas laisser l'assureur faire traîner.</p>
+  </div>
+</section>
+
+<!-- ==========================================================
+     ÉCRAN 12 — LES TROIS GESTES IRRÉVERSIBLES
+     ========================================================== -->
+<section class="ecran" data-id="gestes">
+  <div class="ecran-inner">
+    <span class="label anim">Vigilance</span>
+    <h2 class="titre-ecran anim">Ce qu'il ne faut surtout pas faire</h2>
+    <div class="geste anim">
+      <span class="geste-icone" aria-hidden="true">
+        <svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l12 12M16 4L4 16"/></svg>
+      </span>
+      <div>
+        <strong>Signer une quittance «&nbsp;pour solde de tout compte&nbsp;»</strong>
+        <p>Votre dossier est alors clos. Définitivement.</p>
+      </div>
+    </div>
+    <div class="geste anim">
+      <span class="geste-icone" aria-hidden="true">
+        <svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l12 12M16 4L4 16"/></svg>
+      </span>
+      <div>
+        <strong>Confondre une provision avec votre indemnisation finale</strong>
+        <p>Ce n'est qu'une avance sur le règlement à venir.</p>
+      </div>
+    </div>
+    <div class="geste anim">
+      <span class="geste-icone" aria-hidden="true">
+        <svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l12 12M16 4L4 16"/></svg>
+      </span>
+      <div>
+        <strong>Minimiser vos douleurs devant l'expert par pudeur</strong>
+        <p>Ce que vous ne dites pas ne sera pas réparé.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
+     ÉCRAN 13 — CHECKLIST
+     ========================================================== -->
+<section class="ecran" data-id="checklist">
+  <div class="ecran-inner">
+    <span class="label anim">Se préparer</span>
+    <h2 class="titre-ecran anim">Avant l'appel</h2>
+    <p class="anim">Quand votre avocat vous appellera, il vous posera des questions précises : dix minutes de préparation maintenant, et vos réponses seront prêtes.</p>
+    <ul class="checklist anim" id="checklist">
+      <li><label><input type="checkbox" data-item="constat"><span class="case"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7.5l3 3 6-7"/></svg></span><span class="item-texte">Le constat ou le procès-verbal</span></label></li>
+      <li><label><input type="checkbox" data-item="certificats"><span class="case"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7.5l3 3 6-7"/></svg></span><span class="item-texte">Vos certificats médicaux</span></label></li>
+      <li><label><input type="checkbox" data-item="arrets"><span class="case"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7.5l3 3 6-7"/></svg></span><span class="item-texte">Vos arrêts de travail</span></label></li>
+      <li><label><input type="checkbox" data-item="courriers"><span class="case"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7.5l3 3 6-7"/></svg></span><span class="item-texte">Les courriers reçus de l'assurance</span></label></li>
+      <li><label><input type="checkbox" data-item="justificatifs"><span class="case"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7.5l3 3 6-7"/></svg></span><span class="item-texte">Vos justificatifs de frais et de revenus</span></label></li>
+      <li><label><input type="checkbox" data-item="protection"><span class="case"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7.5l3 3 6-7"/></svg></span><span class="item-texte">Votre contrat de protection juridique</span></label></li>
+    </ul>
+    <p class="compteur-check anim"><span id="compteur-texte">0 document sur 6</span><span class="jauge" aria-hidden="true"><i id="jauge-remplissage"></i></span></p>
+    <p class="texte-secondaire anim" style="margin-top:20px;">Chaque pièce cochée, c'est du temps gagné pour votre dossier.</p>
+  </div>
+</section>
+
+<!-- ==========================================================
+     ÉCRAN 14 — FINAL
+     ========================================================== -->
+<section class="ecran" data-id="final">
+  <div class="ecran-inner centre">
+    <h2 class="intro-titre final-titre anim">L'essentiel, c'est que<br><em>vous décrochiez.</em></h2>
+    <p class="sous-titre anim">Quand votre avocat appellera, répondez :<br>ce premier échange est gratuit,<br>et il peut changer la suite de votre dossier.</p>
+    <p class="mention anim">Victime Conseil — mise en relation avec des avocats experts<br>en réparation du dommage corporel.</p>
+  </div>
+</section>
+
+<!-- ==========================================================
+     NAVIGATION (mode parcours)
+     ========================================================== -->
+<nav class="navigation" aria-label="Navigation du parcours">
+  <button type="button" class="bouton bouton-fantome" id="btn-retour" hidden>← Retour</button>
+  <button type="button" class="bouton bouton-principal" id="btn-suivant">Découvrir ma feuille de route</button>
+</nav>
+<span class="indice-clavier" aria-hidden="true">← → pour naviguer</span>
+
+<script>
+/* ============================================================
+   PARCOURS ÉCRAN PAR ÉCRAN — pilotage du tracé et des écrans
+   ============================================================ */
+(function () {
+  "use strict";
+
+  document.documentElement.classList.add("js");
+
+  /* ---------- Mesure (no-op tant qu'aucun script n'est installé) ---------- */
+  window.trackEvent = window.trackEvent || function (name, payload) { /* no-op */ };
+
+  var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var ecrans = Array.prototype.slice.call(document.querySelectorAll(".ecran"));
+  var N = ecrans.length;
+
+  var btnSuivant = document.getElementById("btn-suivant");
+  var btnRetour = document.getElementById("btn-retour");
+  var compteur = document.getElementById("compteur-ecrans");
+  var progression = document.getElementById("progression-remplissage");
+
+  /* Écran de départ (paramètre de preview : ?ecran=5) */
+  var depart = parseInt(new URLSearchParams(location.search).get("ecran"), 10);
+  var courant = (depart >= 1 && depart <= N) ? depart - 1 : 0;
+
+  /* ============================================================
+     LE TRACÉ — sinusoïde verticale fixe, dessinée à mesure.
+     Le path ne dépend que du viewport : points toujours alignés.
+     ============================================================ */
+  var SVG_NS = "http://www.w3.org/2000/svg";
+  var svg = document.getElementById("trace");
+  var pathBase = svg.querySelector(".trace-base");
+  var pathProgres = svg.querySelector(".trace-progres");
+  var groupePoints = document.getElementById("trace-points");
+
+  var total = 0;
+  var longueursPoints = [];   /* longueur du path à chaque point */
+  var positionsPoints = [];   /* coordonnées {x, y} de chaque point */
+  var dots = [];
+  var longueurCourante = 0;
+  var rafTrace = null;
+
+  function easeInOut(t) { return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; }
+
+  function construireTrace() {
+    var mobile = window.innerWidth < 640;
+    var W = mobile ? 72 : 240;
+    var H = window.innerHeight;
+    var cx = W / 2;
+    var A = mobile ? 13 : 44;          /* amplitude du serpentin */
+    var cycles = mobile ? 3.2 : 2.4;   /* nombre d'ondulations */
+
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    svg.style.width = W + "px";
+    svg.style.height = H + "px";
+
+    /* Sinusoïde échantillonnée */
+    var d = "";
+    var PAS = 140;
+    for (var i = 0; i <= PAS; i++) {
+      var y = -40 + (H + 80) * (i / PAS);
+      var x = cx + A * Math.sin((y / H) * Math.PI * 2 * cycles + 1.2);
+      d += (i === 0 ? "M" : "L") + x.toFixed(1) + " " + y.toFixed(1);
+    }
+    pathBase.setAttribute("d", d);
+    pathProgres.setAttribute("d", d);
+
+    total = pathProgres.getTotalLength();
+    pathProgres.style.strokeDasharray = total;
+
+    /* Un point par écran, réparti sur 84 % de la hauteur */
+    var yMin = H * 0.09, yMax = H * 0.91;
+    positionsPoints = ecrans.map(function (_, i) {
+      return yMin + (yMax - yMin) * (N === 1 ? 0 : i / (N - 1));
+    });
+
+    /* Longueur du path correspondant à chaque Y (échantillonnage) */
+    longueursPoints = positionsPoints.map(function (cibleY) {
+      var meilleur = 0, distMin = Infinity;
+      for (var L = 0; L <= total; L += 3) {
+        var p = pathProgres.getPointAtLength(L);
+        var dist = Math.abs(p.y - cibleY);
+        if (dist < distMin) { distMin = dist; meilleur = L; }
+      }
+      return meilleur;
+    });
+
+    /* Création des points */
+    groupePoints.innerHTML = "";
+    dots = longueursPoints.map(function (L, i) {
+      var p = pathProgres.getPointAtLength(L);
+      var g = document.createElementNS(SVG_NS, "g");
+      g.setAttribute("class", "dot");
+      var halo = document.createElementNS(SVG_NS, "circle");
+      halo.setAttribute("class", "dot-halo");
+      halo.setAttribute("cx", p.x); halo.setAttribute("cy", p.y); halo.setAttribute("r", 13);
+      var core = document.createElementNS(SVG_NS, "circle");
+      core.setAttribute("class", "dot-core");
+      core.setAttribute("cx", p.x); core.setAttribute("cy", p.y); core.setAttribute("r", 5);
+      g.appendChild(halo);
+      g.appendChild(core);
+      /* Clic sur un point déjà atteint : retour rapide */
+      g.addEventListener("click", function () { if (i <= courant) aller(i); });
+      groupePoints.appendChild(g);
+      return g;
+    });
+
+    dessiner(longueursPoints[courant], false);
+  }
+
+  function appliquerLongueur(L) {
+    longueurCourante = L;
+    pathProgres.style.strokeDashoffset = total - L;
+    dots.forEach(function (g, i) {
+      g.classList.toggle("lit", L >= longueursPoints[i] - 2);
+    });
+  }
+
+  function dessiner(cible, anime) {
+    if (rafTrace) cancelAnimationFrame(rafTrace);
+    if (reducedMotion || !anime) { appliquerLongueur(cible); return; }
+    var departL = longueurCourante;
+    var t0 = performance.now();
+    var DUREE = 750;
+    function frame(t) {
+      var k = Math.min(1, (t - t0) / DUREE);
+      appliquerLongueur(departL + (cible - departL) * easeInOut(k));
+      if (k < 1) rafTrace = requestAnimationFrame(frame);
+    }
+    rafTrace = requestAnimationFrame(frame);
+  }
+
+  /* ============================================================
+     NAVIGATION ENTRE ÉCRANS
+     ============================================================ */
+  var enTransition = false;
+
+  var LIBELLES = {
+    "intro":     "Découvrir ma feuille de route",
+    "checklist": "J'ai pris note",
+    "final":     ""
+  };
+
+  function majUI() {
+    compteur.textContent = (courant + 1) + " / " + N;
+    progression.style.width = ((courant + 1) / N * 100) + "%";
+    btnRetour.hidden = courant === 0;
+    var id = ecrans[courant].getAttribute("data-id");
+    if (courant === N - 1) {
+      btnSuivant.hidden = true;
+    } else {
+      btnSuivant.hidden = false;
+      btnSuivant.textContent = LIBELLES[id] || "Continuer";
+    }
+  }
+
+  function aller(i) {
+    if (i < 0 || i >= N || i === courant || enTransition) return;
+    enTransition = true;
+
+    var sortant = ecrans[courant];
+    var entrant = ecrans[i];
+
+    /* 1. le contenu sort */
+    sortant.classList.add("sort");
+
+    /* 2. le tracé avance (ou recule) vers le point suivant */
+    dessiner(longueursPoints[i], true);
+
+    /* 3. le nouvel écran entre */
+    setTimeout(function () {
+      sortant.classList.remove("actif", "sort", "entre");
+      entrant.classList.add("actif");
+      entrant.scrollTop = 0;
+      requestAnimationFrame(function () { entrant.classList.add("entre"); });
+    }, reducedMotion ? 0 : 240);
+
+    setTimeout(function () { enTransition = false; }, reducedMotion ? 0 : 850);
+
+    courant = i;
+    majUI();
+
+    window.trackEvent("screen_view", { index: i + 1, id: entrant.getAttribute("data-id") });
+    if (i === N - 1) window.trackEvent("parcours_termine", {});
+  }
+
+  btnSuivant.addEventListener("click", function () { aller(courant + 1); });
+  btnRetour.addEventListener("click", function () { aller(courant - 1); });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "ArrowRight") { e.preventDefault(); aller(courant + 1); }
+    if (e.key === "ArrowLeft")  { e.preventDefault(); aller(courant - 1); }
+  });
+
+  /* Reconstruction du tracé au resize */
+  var resizeTimer;
+  window.addEventListener("resize", function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(construireTrace, 150);
+  });
+
+  /* ============================================================
+     CHECKLIST — état en mémoire uniquement
+     ============================================================ */
+  var checklist = document.getElementById("checklist");
+  var compteurTexte = document.getElementById("compteur-texte");
+  var jauge = document.getElementById("jauge-remplissage");
+  var totalItems = checklist.querySelectorAll("input[type=checkbox]").length;
+
+  checklist.addEventListener("change", function (e) {
+    var nb = checklist.querySelectorAll("input:checked").length;
+    compteurTexte.textContent = nb + " document" + (nb > 1 ? "s" : "") + " sur " + totalItems;
+    jauge.style.width = Math.round((nb / totalItems) * 100) + "%";
+    window.trackEvent("checklist_item", {
+      item: e.target.getAttribute("data-item"),
+      checked: e.target.checked,
+      total_checked: nb
+    });
+  });
+
+  /* Temps passé sur la page */
+  [30, 60, 120].forEach(function (s) {
+    setTimeout(function () { window.trackEvent("time_on_page", { seconds: s }); }, s * 1000);
+  });
+
+  /* ============================================================
+     INITIALISATION
+     ============================================================ */
+  construireTrace();
+  ecrans[courant].classList.add("actif");
+  requestAnimationFrame(function () { ecrans[courant].classList.add("entre"); });
+  majUI();
+  window.trackEvent("screen_view", { index: courant + 1, id: ecrans[courant].getAttribute("data-id") });
+
+})();
+</script>
+</body>
+</html>
