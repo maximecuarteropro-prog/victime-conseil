@@ -540,6 +540,31 @@ html.js #trace {
   .equipe-photos figcaption strong { font-size: 14px; }
 }
 
+/* Desktop : horizontalité, contenu qui respire */
+@media (min-width: 1100px) {
+  html.js .ecran { padding-left: var(--trace-largeur); }
+  html.js .ecran-inner { max-width: 1180px; padding: 96px 5vw 140px; }
+  html.js .ecran-inner.large { max-width: 1320px; }
+  html.js .ecran p { max-width: 44rem; }
+  .titre-ecran { font-size: 44px; }
+  .sous-titre { font-size: 20px; max-width: 44rem; }
+  html.js .ecran-inner > p.anim:not(.compteur-check):not(.mention):not(.texte-secondaire) { font-size: 19px; line-height: 1.65; }
+  .phrase-cles { max-width: 46rem; font-size: 20px; }
+  .badge-attention { max-width: 46rem; }
+  .citation-duo { grid-template-columns: 380px 1fr; gap: 36px; }
+  .citation-duo .texte-carte { padding: 52px 56px; }
+  .citation-duo blockquote { font-size: 24px; }
+  .equipe-photos { gap: 26px; margin-top: 40px; }
+  .equipe-photos figure { width: 175px; }
+  .equipe-photos img { width: 175px; height: 175px; }
+}
+@media (min-width: 1500px) {
+  html.js .ecran-inner { max-width: 1280px; }
+  html.js .ecran-inner.large { max-width: 1440px; }
+  .equipe-photos figure { width: 190px; }
+  .equipe-photos img { width: 190px; height: 190px; }
+}
+
 /* Motif des points : « … » vertical qui s'anime sous la grille */
 .points-verticaux {
   display: flex;
