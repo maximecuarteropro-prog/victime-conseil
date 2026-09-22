@@ -190,12 +190,6 @@ html.js .entete {
   border-radius: 50%;
   background: var(--accent);
 }
-.compteur-ecrans {
-  font-size: 14px;
-  letter-spacing: 0.08em;
-  color: var(--texte-secondaire);
-  font-variant-numeric: tabular-nums;
-}
 
 html.js .progression {
   display: block;
@@ -672,7 +666,6 @@ html.js .ecran.actif.entre .points-verticaux i:nth-child(3) { animation-delay: 0
 <div class="progression" aria-hidden="true"><i id="progression-remplissage"></i></div>
 <header class="entete">
   <span class="marque"><span class="point-marque" aria-hidden="true"></span>Victime Conseil</span>
-  <span class="compteur-ecrans" id="compteur-ecrans">1 / 14</span>
 </header>
 
 <!-- ==========================================================
@@ -748,8 +741,8 @@ html.js .ecran.actif.entre .points-verticaux i:nth-child(3) { animation-delay: 0
     <span class="label anim">Le moment décisif</span>
     <h2 class="titre-ecran anim">L'expertise médicale.</h2>
     <p class="anim">C'est le rendez-vous qui décide de presque toute votre indemnisation : une gêne absente du rapport de l'expert n'est presque jamais réparée.</p>
-    <p class="anim">Or, le médecin qui vous examine est <span class="stab">missionné et payé par l'assurance</span>. Beaucoup de victimes s'y rendent seules, persuadées qu'il est neutre.</p>
-    <p class="phrase-cles anim">Votre avocat, lui, ne laisse rien au hasard : c'est lui qui choisit le médecin-conseil qui vous accompagnera — et qui provoque une contre-expertise si le rapport oublie des préjudices.</p>
+    <p class="anim">Le médecin expert est neutre — mais <span class="stab">il ne connaît de vous que votre dossier</span>. Une pièce manquante, une douleur tue : le rapport vous sous-estime, sans que personne ne l'ait voulu.</p>
+    <p class="phrase-cles anim">Votre avocat, lui, ne laisse rien au hasard : il complète votre dossier pièce par pièce, vous fait accompagner d'un médecin-conseil — et provoque une contre-expertise si le rapport oublie des préjudices.</p>
   </div>
 </section>
 
@@ -827,6 +820,14 @@ html.js .ecran.actif.entre .points-verticaux i:nth-child(3) { animation-delay: 0
       <figure>
         <img src="photos/Zinedine-Zidane.jpg" alt="Zinedine Zidane" loading="lazy">
         <figcaption><strong>Zinedine Zidane</strong></figcaption>
+      </figure>
+      <figure>
+        <img src="photos/olivier-descamps.jpg" alt="Maître Olivier Descamps" loading="lazy">
+        <figcaption><strong>Olivier Descamps</strong></figcaption>
+      </figure>
+      <figure>
+        <img src="photos/charlotte-souci-guedj.jpg" alt="Maître Charlotte Souci-Guedj" loading="lazy">
+        <figcaption><strong>Charlotte Souci-Guedj</strong></figcaption>
       </figure>
     </div>
     <div class="points-verticaux anim" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -960,7 +961,6 @@ html.js .ecran.actif.entre .points-verticaux i:nth-child(3) { animation-delay: 0
 
   var btnSuivant = document.getElementById("btn-suivant");
   var btnRetour = document.getElementById("btn-retour");
-  var compteur = document.getElementById("compteur-ecrans");
   var progression = document.getElementById("progression-remplissage");
 
   /* Écran de départ (paramètre de preview : ?ecran=5) */
@@ -1086,7 +1086,6 @@ html.js .ecran.actif.entre .points-verticaux i:nth-child(3) { animation-delay: 0
   };
 
   function majUI() {
-    compteur.textContent = (courant + 1) + " / " + N;
     progression.style.width = ((courant + 1) / N * 100) + "%";
     btnRetour.hidden = courant === 0;
     var id = ecrans[courant].getAttribute("data-id");
