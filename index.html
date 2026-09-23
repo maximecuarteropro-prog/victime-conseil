@@ -250,18 +250,6 @@ html.js .navigation {
   padding-right: 52px;
   padding-left: 34px;
 }
-/* P1 : le reflet glisse rarement sur le bouton (1,26 s toutes les 7 s) */
-.bouton-principal::before {
-  content: "";
-  position: absolute;
-  top: 0; bottom: 0; left: 0;
-  width: 34%;
-  border-radius: inherit;
-  background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.30) 50%, transparent 100%);
-  transform: translateX(-175%) skewX(-18deg);
-  pointer-events: none;
-  animation: cta-reflet 7s cubic-bezier(0.4,0,0.2,1) infinite;
-}
 /* Micro-flèche qui pulse */
 .bouton-principal::after {
   content: "→";
@@ -273,18 +261,10 @@ html.js .navigation {
   pointer-events: none;
   animation: cta-fleche 1.8s ease-in-out infinite;
 }
-.bouton-principal:hover::before,
-.bouton-principal:focus-visible::before,
-.bouton-principal:active::before { animation-play-state: paused; }
 
 @keyframes cta-halo {
   0%, 100% { box-shadow: 0 4px 12px rgba(27,122,140,0.14), 0 1px 3px rgba(28,28,26,0.08); }
   50%      { box-shadow: 0 7px 22px rgba(27,122,140,0.26), 0 1px 3px rgba(28,28,26,0.08); }
-}
-@keyframes cta-reflet {
-  0%, 80% { transform: translateX(-175%) skewX(-18deg); }
-  90%     { transform: translateX(230%)  skewX(-18deg); }
-  100%    { transform: translateX(230%)  skewX(-18deg); }
 }
 @keyframes cta-fleche {
   0%, 100% { transform: translateY(-50%) translateX(0);   opacity: 0.55; }
@@ -345,7 +325,7 @@ html.js .navigation {
 
 /* Reduced motion : CTA figé, flèche + reflet + halo coupés */
 @media (prefers-reduced-motion: reduce) {
-  .bouton-principal, .bouton-principal::before, .bouton-principal::after { animation: none !important; }
+  .bouton-principal, .bouton-principal::after { animation: none !important; }
   .bouton-principal::after { display: none; }
   .bouton-principal {
     box-shadow: 0 4px 14px rgba(27,122,140,0.20), 0 1px 3px rgba(28,28,26,0.08);
@@ -783,7 +763,7 @@ html.js .ecran.actif.entre .points-verticaux i:nth-child(3) { animation-delay: 0
         <img src="photos/charlotte-souci-guedj.jpg" alt="Maître Charlotte Souci-Guedj" loading="lazy">
       </div>
       <div class="texte-carte anim">
-        <blockquote>«&nbsp;L'expertise médicale est le moment où se joue votre indemnisation. De ce fait, nous accompagnons les victimes à chaque expertise.&nbsp;»</blockquote>
+        <blockquote>«&nbsp;Victime d'un accident&nbsp;? Ne laissez pas l'assureur évaluer seul votre préjudice.&nbsp;»</blockquote>
         <p class="source"><strong>Maître Charlotte Souci-Guedj</strong>Avocat en réparation du dommage corporel</p>
       </div>
     </div>
@@ -854,7 +834,7 @@ html.js .ecran.actif.entre .points-verticaux i:nth-child(3) { animation-delay: 0
       </figure>
       <figure>
         <img src="photos/charlotte-souci-guedj.jpg" alt="Maître Charlotte Souci-Guedj" loading="lazy">
-        <figcaption><strong>Charlotte Souci-Guedj</strong></figcaption>
+        <figcaption><strong>Charlotte Souci-Guedj</strong><span class="ville">Nice</span></figcaption>
       </figure>
     </div>
     <div class="points-verticaux anim" aria-hidden="true"><i></i><i></i><i></i></div>
